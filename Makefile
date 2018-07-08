@@ -1,5 +1,5 @@
-CFLAGS = -ggdb
-objects := ndu.o
+CFLAGS = -ggdb -MP -MMD
+objects := ndu.o fs.o
 
 all: ndu
 
@@ -9,3 +9,5 @@ clean:
 	$(RM) $(objects:.o=.d) $(objects) ndu
 
 .PHONY: clean
+
+-include $(objects:.o=.d) 
