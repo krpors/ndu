@@ -1,4 +1,4 @@
-CFLAGS = -ggdb -MP -MMD
+CFLAGS = -ggdb -MP -MMD -D_XOPEN_SOURCE=500
 objects := ndu.o fs.o
 
 all: ndu
@@ -10,4 +10,4 @@ clean:
 
 .PHONY: clean
 
--include $(objects:.o=.d) 
+-include $(objects:.o=.d)

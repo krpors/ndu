@@ -1,44 +1,28 @@
 #ifndef NDU_FS_H
 #define NDU_FS_H
 
+struct dir {
+	char* name;
+
+	int dirlen;
+	int dircap;
+	struct dir** dirs;
+
+	int filelen;
+	int filecap;
+	struct file** files;
+};
+
 struct file {
 	char* name;
 };
 
-/*
- * Directory.
- */
-struct dir {
-	char* dirname;
-
-	struct dirlist*  directories;
-	struct filelist* files;
-};
-
-
-struct dir* dir_create();
+struct dir* dir_create(const char* name);
+void dir_add_dir(struct dir* to, struct dir* what);
+void dir_add_file(struct dir* to, struct file* f);
 void dir_free(struct dir* d);
 
-
-
-struct filelist {
-	struct file** arr;
-	int cap;
-	int len;
-};
-
-struct filelist* filelist_create();
-void filelist_add(struct filelist* fl, struct file* f);
-void filelist_free(struct filelist* fl);
-
-struct dirlist {
-	struct dir** arr;
-	int cap;
-	int len;
-};
-
-struct dirlist* dirlist_create();
-void dirlist_add(struct dirlist* dl, struct dir* d);
-void dirlist_free(struct dirlist* d);
+struct file* file_create(const char* name);
+void file_free(struct file* f);
 
 #endif // NDU_FS_H

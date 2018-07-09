@@ -1,25 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ftw.h>
 
 #include "fs.h"
 
+static int callback(const char* fpath, const struct stat* sb, int typeflag, struct FTW* ftwbuf) {
+	printf("fpath: %s\n", fpath);
+	return 0;
+}
+
 int main(int argc, char* argv[]) {
-	struct dirlist* a = dirlist_create();
+	struct dir* root = dir_create("root");
 
-	for (int i = 0; i < 500; i++) {
-		struct dir* d = malloc(sizeof(struct dir));
-		d->dirname = malloc(30 * sizeof(char));
-		snprintf(d->dirname, 30, "dir %d", i);
-		// printf("Adding dir %d\n", i);
-		dirlist_add(a, d);
-	}
+	struct dir* home = dir_create("home");
+	struct dir* var  = dir_create("var");
 
-	printf("cap: %d, len: %d\n", a->cap, a->len);
+	dir_add_dir(root, home);
+	dir_add_dir(root, var);
 
-	for(int i = 0; i < a->len; i++) {
-		// printf("%s\n", a->arr[i]->dirname);
-	}
+	struct dir* krpors = dir_create("krpors");
+	dir_add_dir(home, krpors);
 
-	dirlist_free(a);
+	struct file* f = file_create(".inputrc");
+	dir_add_file(krpors, f);
+
+	dir_free(root);
+
+	int x = nftw("/home", callback, 20, 0);
 }

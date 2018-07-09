@@ -4,72 +4,63 @@
 
 #include "fs.h"
 
-struct filelist* filelist_create() {
-	struct filelist* fl = malloc(sizeof(struct filelist));
-	fl->cap = 1;
-	fl->len = 0;
-	fl->arr = malloc(sizeof(struct file));
-	return fl;
+struct dir* dir_create(const char* name) {
+	struct dir* n = malloc(sizeof(struct dir));
+	n->name = strdup(name);
+	n->dirlen = 0;
+	n->dircap = 1;
+	n->dirs = malloc(sizeof(struct dir));
+
+	n->filelen = 0;
+	n->filecap = 1;
+	n->files = malloc(sizeof(struct file));
+	return n;
 }
 
-void filelist_add(struct filelist* fl, struct file* f) {
-	size_t s = sizeof(f);
-	fl->arr[fl->len++] = f;
+void dir_add_dir(struct dir* to, struct dir* what) {
+	to->dirs[to->dirlen++] = what;
 
-	if (fl->len >= fl->cap) {
-		fl->cap *= 2;
-		fl->arr = realloc(fl->arr, fl->cap * sizeof(struct file));
+	if (to->dirlen >= to->dircap) {
+		to->dircap *= 2;
+		to->dirs = realloc(to->dirs, to->dircap * sizeof(struct dir));
 	}
 }
 
+void dir_add_file(struct dir* to, struct file* f) {
+	to->files[to->filelen++] = f;
 
-void filelist_free(struct filelist* fl) {
-	for (int i = 0; i < fl->len; i++) {
-		free(fl->arr[i]->name);
-		free(fl->arr[i]);
+	if (to->filelen >= to->filecap) {
+		to->filecap *= 2;
+		to->files = realloc(to->files, to->filecap * sizeof(struct file));
 	}
-	free(fl->arr);
-	free(fl);
+
 }
 
-struct dir* dir_create() {
-	struct dir* d = malloc(sizeof(struct dir));
-	d->directories = dirlist_create();
-	d->files = filelist_create();
-	return d;
-}
-
+// TODO: this free function frees recursively. This will probably explode
+// with large file structures.
 void dir_free(struct dir* d) {
-	free(d->dirname);
-	if (d->directories != NULL) {
-		for (int i = 0; i < d->directories->len; i++) {
-			dir_free(d->directories->arr[i]);
-		}
+	free(d->name);
+	for (int i = 0; i < d->dirlen; i++) {
+		printf("freeing dir %s\n", d->dirs[i]->name);
+		dir_free(d->dirs[i]);
 	}
+	for (int i = 0; i < d->filelen; i++) {
+		printf("freeing file %s\n", d->files[i]->name);
+		file_free(d->files[i]);
+	}
+	free(d->dirs);
+	free(d->files);
 	free(d);
 }
 
-struct dirlist* dirlist_create() {
-	struct dirlist* dl = malloc(sizeof(struct dirlist));
-	dl->cap  = 1;
-	dl->len = 0;
-	dl->arr = malloc(sizeof(struct dir));
+
+struct file* file_create(const char* name) {
+	struct file* f = malloc(sizeof(struct file));
+	f->name = strdup(name);
+	return f;
 }
 
-void dirlist_add(struct dirlist* dl, struct dir* d) {
-	dl->arr[dl->len++] = d;
-
-	if (dl->len >= dl->cap) {
-		dl->cap *= 2;
-		dl->arr = realloc(dl->arr, dl->cap * sizeof(struct dir));
-	}
-}
-
-void dirlist_free(struct dirlist* d) {
-	for (int i = 0; i < d->len; i++) {
-		free(d->arr[i]->dirname);
-		free(d->arr[i]);
-	}
-	free(d->arr);
-	free(d);
+void file_free(struct file* f) {
+	free(f->name);
+	free(f);
 }
