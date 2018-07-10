@@ -1,5 +1,6 @@
 #include <dirent.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,6 +41,17 @@ void dir_add_file(struct dir* to, struct file* f) {
 
 }
 
+void dir_sort_files(struct dir* d, bool deep) {
+	qsort(d->files, d->filelen, sizeof(struct file*), file_comp);
+	if (deep) {
+		// if a 'deep sort' is requested, traverse through the whole
+		// chain of subdirectories.
+		for (int i = 0; i < d->dirlen; i++) {
+			dir_sort_files(d->dirs[i], true);
+		}
+	}
+}
+
 void dir_print(const struct dir* d, int indent) {
 	int spaces = indent * 4;
 	for (int i = 0; i < d->dirlen; i++) {
@@ -48,7 +60,7 @@ void dir_print(const struct dir* d, int indent) {
 	}
 
 	for (int i = 0; i < d->filelen; i++) {
-		printf("%*s%s\n", spaces, "", d->files[i]->name);
+		printf("%*s%s (%li)\n", spaces, "", d->files[i]->name, d->files[i]->size);
 	}
 
 }
@@ -76,6 +88,16 @@ struct file* file_create(const char* name) {
 	struct file* f = malloc(sizeof(struct file));
 	f->name = strdup(name);
 	return f;
+}
+
+
+int file_comp(const void* a, const void* b) {
+	// The voids are disguised as a pointer to a pointer, since the
+	// 'files' struct field is an array.
+	const struct file* aa = *(struct file**) a;
+	const struct file* bb = *(struct file**) b;
+
+	return bb->size - aa->size;
 }
 
 void file_free(struct file* f) {
@@ -112,6 +134,7 @@ int traverse(const char* dir, struct dir* root) {
 		if (S_ISREG(statbuf.st_mode)) {
 			//printf("%*s%s (size = %li)\n", spaces, "", entry->d_name, statbuf.st_size);
 			struct file* f = file_create(entry->d_name);
+			f->size = statbuf.st_size;
 			dir_add_file(root, f);
 		}
 	}
