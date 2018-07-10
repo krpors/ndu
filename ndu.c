@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ftw.h>
+#include <errno.h>
 
 #include <unistd.h>
 #include <stdio.h>
@@ -16,35 +17,38 @@ static int callback(const char* fpath, const struct stat* sb, int typeflag, stru
 	return 0;
 }
 
-void printdir(const char *dir, int depth) {
-	DIR *dp;
-	struct dirent *entry;
+int printdir(const char* dir, int depth) {
+	DIR* dp;
+	struct dirent* entry;
 	struct stat statbuf;
-	int spaces = depth*4;
+	int spaces = depth * 4;
 
 	if((dp = opendir(dir)) == NULL) {
-		fprintf(stderr,"cannot open directory: %s\n", dir);
-		return;
+		fprintf(stderr, "%s: %s\n", dir, strerror(errno));
+		return 1;
 	}
 	chdir(dir);
-	while((entry = readdir(dp)) != NULL) {
+	while ((entry = readdir(dp)) != NULL) {
 		lstat(entry->d_name,&statbuf);
-		if(S_ISDIR(statbuf.st_mode)) {
-		/* Found a directory, but ignore . and .. */
+		if (S_ISDIR(statbuf.st_mode)) {
+			printf("%s \n", entry->d_name);
+			// Found a directory, but ignore . and ..
 			if(strcmp(".",entry->d_name) == 0 || strcmp("..",entry->d_name) == 0) {
 				continue;
 			}
 
-			printf("%*s%s/\n",spaces,"",entry->d_name);
-			/* Recurse at a new indent level */
-			printdir(entry->d_name,depth+1);
+			printf("%*s%s/\n", spaces, "", entry->d_name);
+			// Recurse.
+			printdir(entry->d_name, depth + 1);
 		}
-		else {
-			printf("%*s%s\n",spaces,"",entry->d_name);
+
+		if (S_ISREG(statbuf.st_mode)) {
+			printf("%*s%s (size = %li)\n", spaces, "", entry->d_name, statbuf.st_size);
 		}
 	}
 	chdir("..");
 	closedir(dp);
+	return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -64,5 +68,5 @@ int main(int argc, char* argv[]) {
 
 	dir_free(root);
 
-	printdir("/home/krpors/Development", 0);
+	printdir("/home/krpors/temp", 0);
 }
