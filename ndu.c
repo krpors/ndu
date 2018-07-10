@@ -33,25 +33,24 @@ void test1() {
 void dir_lol(struct dir* d) {
 	for (int i = 0; i < d->dirlen; i++) {
 		dir_lol(d->dirs[i]);
+		// add the size of the subdirectory to the parent.
+		// This will make sure the sizes of all subdirectories
+		// are added to the grand total of parents.
+		d->size += d->dirs[i]->size;
 	}
 
-	printf("Calcing size of dir %s\n", d->name);
 	for (int i = 0; i < d->filelen; i++) {
 		d->size += d->files[i]->size;
-		printf("\tSize += %li\n", d->size);
 	}
-
 }
 
 void test2() {
-	struct dir* root = dir_create("");
-
-	traverse("/home/krpors/temp/gendex/", root);
+	struct dir* root = dir_load_tree("/home/krpors/Temp/exampledir");
 
 	dir_sort_files(root, true);
 	dir_lol(root);
-	printf("\n\n\n");
-	dir_print(root, 0);
+	printf("Root is %s (%li)\n", root->name, root->size);
+	dir_print(root, 1);
 
 	dir_free(root);
 }

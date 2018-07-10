@@ -9,6 +9,12 @@
 
 #include "fs.h"
 
+struct dir* dir_load_tree(const char* root) {
+	struct dir* tree = dir_create("Root");
+	traverse(root, tree);
+	return tree;
+}
+
 struct dir* dir_create(const char* name) {
 	struct dir* n = malloc(sizeof(struct dir));
 	n->name = strdup(name);
@@ -57,12 +63,14 @@ void dir_sort_files(struct dir* d, bool deep) {
 void dir_print(const struct dir* d, int indent) {
 	int spaces = indent * 4;
 	for (int i = 0; i < d->dirlen; i++) {
-		printf("%*s%s (%li)\n", spaces, "", d->dirs[i]->name, d->size);
-		dir_print(d->dirs[i], indent + 1);
+		struct dir* subdir = d->dirs[i];
+		printf("%*s%s (%li)\n", spaces, "", subdir->name, subdir->size);
+		dir_print(subdir, indent + 1);
 	}
 
 	for (int i = 0; i < d->filelen; i++) {
-		printf("%*s%s (%li)\n", spaces, "", d->files[i]->name, d->files[i]->size);
+		struct file* f = d->files[i];
+		printf("%*s%s (%li)\n", spaces, "", f->name, f->size);
 	}
 
 }
@@ -86,15 +94,14 @@ void dir_free(struct dir* d) {
 }
 
 
-struct file* file_create(struct dir* parent, const char* name) {
+struct file* file_create(const char* name) {
 	struct file* f = malloc(sizeof(struct file));
-	f->parent = parent;
 	f->name = strdup(name);
 	return f;
 }
 
 
-int file_comp(const void* a, const void* b) {
+static int file_comp(const void* a, const void* b) {
 	// The voids are disguised as a pointer to a pointer, since the
 	// 'files' struct field is an array.
 	const struct file* aa = *(struct file**) a;
@@ -108,13 +115,12 @@ void file_free(struct file* f) {
 	free(f);
 }
 
-int traverse(const char* dir, struct dir* root) {
+static int traverse(const char* dir, struct dir* root) {
 	DIR* dp;
 	struct dirent* entry;
 	struct stat statbuf;
 
 	if((dp = opendir(dir)) == NULL) {
-		fprintf(stderr, "%s: %s\n", dir, strerror(errno));
 		return 1;
 	}
 	chdir(dir);
@@ -136,7 +142,7 @@ int traverse(const char* dir, struct dir* root) {
 
 		if (S_ISREG(statbuf.st_mode)) {
 			//printf("%*s%s (size = %li)\n", spaces, "", entry->d_name, statbuf.st_size);
-			struct file* f = file_create(root, entry->d_name);
+			struct file* f = file_create(entry->d_name);
 			f->size = statbuf.st_size;
 			dir_add_file(root, f);
 		}
