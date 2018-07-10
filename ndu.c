@@ -44,11 +44,14 @@ void dir_lol(struct dir* d) {
 	}
 }
 
-void test2() {
-	struct dir* root = dir_load_tree("/home/krpors/Temp/exampledir");
+void test2(const char* rootdir) {
+	struct dir* root = dir_load_tree(rootdir);
+
+	dir_lol(root);
 
 	dir_sort_files(root, true);
-	dir_lol(root);
+	dir_sort_dirs(root, true);
+
 	printf("Root is %s (%li)\n", root->name, root->size);
 	dir_print(root, 1);
 
@@ -56,5 +59,9 @@ void test2() {
 }
 
 int main(int argc, char* argv[]) {
-	test2();
+	if (argc != 2) {
+		fprintf(stderr, "gimme one dir plx\n");
+		exit(1);
+	}
+	test2(argv[1]);
 }

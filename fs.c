@@ -9,6 +9,11 @@
 
 #include "fs.h"
 
+// Forward declarations of static functions.
+static int file_comp(const void* a, const void* b);
+static int dir_comp(const void* a, const void* b);
+static int traverse(const char* dir, struct dir* root);
+
 struct dir* dir_load_tree(const char* root) {
 	struct dir* tree = dir_create("Root");
 	traverse(root, tree);
@@ -49,6 +54,15 @@ void dir_add_file(struct dir* to, struct file* f) {
 
 }
 
+void dir_sort_dirs(struct dir* d, bool deep) {
+	qsort(d->dirs, d->dirlen, sizeof(struct dir*), dir_comp);
+	if (deep) {
+		for (int i = 0; i < d->dirlen; i++) {
+			dir_sort_dirs(d->dirs[i], true);
+		}
+	}
+}
+
 void dir_sort_files(struct dir* d, bool deep) {
 	qsort(d->files, d->filelen, sizeof(struct file*), file_comp);
 	if (deep) {
@@ -64,7 +78,7 @@ void dir_print(const struct dir* d, int indent) {
 	int spaces = indent * 4;
 	for (int i = 0; i < d->dirlen; i++) {
 		struct dir* subdir = d->dirs[i];
-		printf("%*s%s (%li)\n", spaces, "", subdir->name, subdir->size);
+		printf("%*s\x1b[34m%s (%li)\x1b[0m\n", spaces, "", subdir->name, subdir->size);
 		dir_print(subdir, indent + 1);
 	}
 
@@ -110,11 +124,24 @@ static int file_comp(const void* a, const void* b) {
 	return bb->size - aa->size;
 }
 
+static int dir_comp(const void* a, const void* b) {
+	// The voids are disguised as a pointer to a pointer, since the
+	// 'files' struct field is an array.
+	const struct dir* aa = *(struct dir**) a;
+	const struct dir* bb = *(struct dir**) b;
+
+	return bb->size - aa->size;
+}
+
+
 void file_free(struct file* f) {
 	free(f->name);
 	free(f);
 }
-
+/*
+ * Traverses a directory 'root' recursively, and fills the given directory 'd'
+ * with files and directories.
+ */
 static int traverse(const char* dir, struct dir* root) {
 	DIR* dp;
 	struct dirent* entry;
