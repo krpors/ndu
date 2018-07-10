@@ -1,4 +1,4 @@
-CFLAGS = -ggdb -MP -MMD -D_XOPEN_SOURCE=500
+CFLAGS = -Wall -Wextra -ggdb -MP -MMD -D_XOPEN_SOURCE=500
 objects := ndu.o fs.o
 
 all: ndu
