@@ -19,6 +19,8 @@ struct dir* dir_create(const char* name) {
 	n->filelen = 0;
 	n->filecap = 1;
 	n->files = malloc(sizeof(struct file));
+
+	n->size = 0;
 	return n;
 }
 
@@ -55,7 +57,7 @@ void dir_sort_files(struct dir* d, bool deep) {
 void dir_print(const struct dir* d, int indent) {
 	int spaces = indent * 4;
 	for (int i = 0; i < d->dirlen; i++) {
-		printf("%*s%s\n", spaces, "", d->dirs[i]->name);
+		printf("%*s%s (%li)\n", spaces, "", d->dirs[i]->name, d->size);
 		dir_print(d->dirs[i], indent + 1);
 	}
 
@@ -84,8 +86,9 @@ void dir_free(struct dir* d) {
 }
 
 
-struct file* file_create(const char* name) {
+struct file* file_create(struct dir* parent, const char* name) {
 	struct file* f = malloc(sizeof(struct file));
+	f->parent = parent;
 	f->name = strdup(name);
 	return f;
 }
@@ -133,7 +136,7 @@ int traverse(const char* dir, struct dir* root) {
 
 		if (S_ISREG(statbuf.st_mode)) {
 			//printf("%*s%s (size = %li)\n", spaces, "", entry->d_name, statbuf.st_size);
-			struct file* f = file_create(entry->d_name);
+			struct file* f = file_create(root, entry->d_name);
 			f->size = statbuf.st_size;
 			dir_add_file(root, f);
 		}

@@ -5,6 +5,7 @@
 
 #include "fs.h"
 
+#if 0
 void test1() {
 	struct dir* root = dir_create("root");
 
@@ -27,14 +28,29 @@ void test1() {
 
 	dir_free(root);
 }
+#endif
+
+void dir_lol(struct dir* d) {
+	for (int i = 0; i < d->dirlen; i++) {
+		dir_lol(d->dirs[i]);
+	}
+
+	printf("Calcing size of dir %s\n", d->name);
+	for (int i = 0; i < d->filelen; i++) {
+		d->size += d->files[i]->size;
+		printf("\tSize += %li\n", d->size);
+	}
+
+}
 
 void test2() {
 	struct dir* root = dir_create("");
 
-	traverse("/home/krpors/.config/", root);
+	traverse("/home/krpors/temp/gendex/", root);
 
-	printf("\n\n\n");
 	dir_sort_files(root, true);
+	dir_lol(root);
+	printf("\n\n\n");
 	dir_print(root, 0);
 
 	dir_free(root);
