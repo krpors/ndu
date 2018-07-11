@@ -10,12 +10,29 @@
 #include "fs.h"
 
 // Forward declarations of static functions.
+
+/*
+ * This function compares two `struct file` pointers, taking
+ * the size into account so that the largest file will be the
+ * first in the array.
+ */
 static int file_comp(const void* a, const void* b);
+
+/*
+ * This function compares two `struct dir` pointers, taking
+ * the size into account so that the largest dir will be the
+ * first in the array.
+ */
 static int dir_comp(const void* a, const void* b);
+
+/*
+ * Traverses the given directory `dir', and populates the
+ * `root' with a filesystem tree, based from the given `dir'.
+ */
 static int traverse(const char* dir, struct dir* root);
 
 struct dir* dir_load_tree(const char* root) {
-	struct dir* tree = dir_create("Root");
+	struct dir* tree = dir_create(root);
 	traverse(root, tree);
 	return tree;
 }
@@ -78,7 +95,7 @@ void dir_print(const struct dir* d, int indent) {
 	int spaces = indent * 4;
 	for (int i = 0; i < d->dirlen; i++) {
 		struct dir* subdir = d->dirs[i];
-		printf("%*s\x1b[34m%s (%li)\x1b[0m\n", spaces, "", subdir->name, subdir->size);
+		printf("%*s\x1b[34m%s/ (%li)\x1b[0m\n", spaces, "", subdir->name, subdir->size);
 		dir_print(subdir, indent + 1);
 	}
 

@@ -52,7 +52,7 @@ void test2(const char* rootdir) {
 	dir_sort_files(root, true);
 	dir_sort_dirs(root, true);
 
-	printf("Root is %s (%li)\n", root->name, root->size);
+	printf("%s (%li)\n", root->name, root->size);
 	dir_print(root, 1);
 
 	dir_free(root);
