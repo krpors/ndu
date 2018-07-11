@@ -25,17 +25,18 @@ static int file_comp(const void* a, const void* b);
 static int dir_comp(const void* a, const void* b);
 
 /*
- * Traverses the given directory `dir', and populates the
- * `root' with a filesystem tree, based from the given `dir'.
+ * Traverses a directory 'root' recursively, and fills the given directory 'd'
+ * with files and directories. Returns `true' when the directory can be opened
+ * succesfully, or `false' if otherwise.
  */
-static int traverse(const char* dir, struct dir* root);
+bool traverse(const char* dir, struct dir* root);
 
 struct dir* dir_load_tree(const char* root) {
 	struct dir* tree = dir_create(root);
-	if (traverse(root, tree) != 0) {
-		return NULL;
+	if (traverse(root, tree)) {
+		return tree;
 	}
-	return tree;
+	return NULL;
 }
 
 struct dir* dir_create(const char* name) {
@@ -181,17 +182,14 @@ void file_free(struct file* f) {
 	free(f->name);
 	free(f);
 }
-/*
- * Traverses a directory 'root' recursively, and fills the given directory 'd'
- * with files and directories.
- */
-static int traverse(const char* dir, struct dir* root) {
+
+bool traverse(const char* dir, struct dir* root) {
 	DIR* dp;
 	struct dirent* entry;
 	struct stat statbuf;
 
 	if((dp = opendir(dir)) == NULL) {
-		return 1;
+		return false;
 	}
 	chdir(dir);
 	while ((entry = readdir(dp)) != NULL) {
@@ -219,6 +217,6 @@ static int traverse(const char* dir, struct dir* root) {
 	}
 	chdir("..");
 	closedir(dp);
-	return 0;
 
+	return true;
 }
