@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,27 +31,16 @@ void test1() {
 }
 #endif
 
-void dir_lol(struct dir* d) {
-	for (int i = 0; i < d->dirlen; i++) {
-		dir_lol(d->dirs[i]);
-		// add the size of the subdirectory to the parent.
-		// This will make sure the sizes of all subdirectories
-		// are added to the grand total of parents.
-		d->size += d->dirs[i]->size;
-	}
-
-	for (int i = 0; i < d->filelen; i++) {
-		d->size += d->files[i]->size;
-	}
-}
-
 void test2(const char* rootdir) {
 	struct dir* root = dir_load_tree(rootdir);
+	if (root == NULL) {
+		fprintf(stderr, "%s: %s\n", rootdir, strerror(errno));
+		exit(1);
+	}
 
-	dir_lol(root);
+	dir_analyze_sizes(root);
 
-	dir_sort_files(root, true);
-	dir_sort_dirs(root, true);
+	dir_sort_all(root, true);
 
 	printf("%s (%li)\n", root->name, root->size);
 	dir_print(root, 1);
@@ -63,5 +53,6 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "gimme one dir plx\n");
 		exit(1);
 	}
+
 	test2(argv[1]);
 }

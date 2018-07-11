@@ -1,5 +1,4 @@
 #include <dirent.h>
-#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +32,9 @@ static int traverse(const char* dir, struct dir* root);
 
 struct dir* dir_load_tree(const char* root) {
 	struct dir* tree = dir_create(root);
-	traverse(root, tree);
+	if (traverse(root, tree) != 0) {
+		return NULL;
+	}
 	return tree;
 }
 
@@ -67,6 +68,31 @@ void dir_add_file(struct dir* to, struct file* f) {
 	if (to->filelen >= to->filecap) {
 		to->filecap *= 2;
 		to->files = realloc(to->files, to->filecap * sizeof(struct file));
+	}
+
+}
+
+void dir_analyze_sizes(struct dir* d) {
+	for (int i = 0; i < d->dirlen; i++) {
+		dir_analyze_sizes(d->dirs[i]);
+		// add the size of the subdirectory to the parent.
+		// This will make sure the sizes of all subdirectories
+		// are added to the grand total of parents.
+		d->size += d->dirs[i]->size;
+	}
+
+	for (int i = 0; i < d->filelen; i++) {
+		d->size += d->files[i]->size;
+	}
+}
+
+void dir_sort_all(struct dir* d, bool deep) {
+	qsort(d->dirs,  d->dirlen,  sizeof(struct dir*),  dir_comp);
+	qsort(d->files, d->filelen, sizeof(struct file*), file_comp);
+	if (deep) {
+		for (int i = 0; i < d->dirlen; i++) {
+			dir_sort_all(d->dirs[i], true);
+		}
 	}
 
 }

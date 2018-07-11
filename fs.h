@@ -36,7 +36,27 @@ struct dir* dir_load_tree(const char* root);
 struct dir* dir_create(const char* name);
 void dir_add_dir(struct dir* to, struct dir* what);
 void dir_add_file(struct dir* to, struct file* f);
+
+/*
+ * This function analyses the sizes of the files and propagates the
+ * sizes to their parent directories, all the way to the root.
+ */
+void dir_analyze_sizes(struct dir* d);
+
+/*
+ * Sorts the directories and files based on their sizes. Only really useful
+ * when `dir_analyze_sizes' has been called on the struct `d'.
+ */
+void dir_sort_all(struct dir* d, bool deep);
+
+/**
+ * Sorts directories based on their size attribute.
+ */
 void dir_sort_dirs(struct dir* d, bool deep);
+
+/**
+ * Sorts files based on their size attribute.
+ */
 void dir_sort_files(struct dir* d, bool deep);
 
 /*
