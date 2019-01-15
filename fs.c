@@ -29,7 +29,7 @@ static int dir_comp(const void* a, const void* b);
  * with files and directories. Returns `true' when the directory can be opened
  * succesfully, or `false' if otherwise.
  */
-bool traverse(const char* dir, struct dir* root);
+static bool traverse(const char* dir, struct dir* root);
 
 struct dir* dir_load_tree(const char* root) {
 	struct dir* tree = dir_create(root);
@@ -191,7 +191,12 @@ bool traverse(const char* dir, struct dir* root) {
 	if((dp = opendir(dir)) == NULL) {
 		return false;
 	}
-	chdir(dir);
+	int ret = chdir(dir);
+	if (ret == -1) {
+		// If we failed to traverse a directory (permission denied or whatever)
+		// just return true so the iteration continues. This will require
+		return true;
+	}
 	while ((entry = readdir(dp)) != NULL) {
 		lstat(entry->d_name,&statbuf);
 		if (S_ISDIR(statbuf.st_mode)) {

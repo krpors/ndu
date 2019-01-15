@@ -1,6 +1,8 @@
 #ifndef NDU_FS_H
 #define NDU_FS_H
 
+#include <sys/types.h>
+
 /*
  * This struct contains information about a directory on the filesystem.
  */
