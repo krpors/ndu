@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <curses.h>
+#include <menu.h>
+
 #include "fs.h"
 
 #if 0
@@ -31,6 +34,7 @@ void test1() {
 }
 #endif
 
+#if 0
 void test2(const char* rootdir) {
 	struct dir* root = dir_load_tree(rootdir);
 	if (root == NULL) {
@@ -47,12 +51,35 @@ void test2(const char* rootdir) {
 
 	dir_free(root);
 }
+#endif
+
+void curses() {
+	ITEM** items;
+	MENU* menu;
+
+	items = calloc(3 + 1, sizeof(ITEM*));
+	items[0] = new_item("Herro! 1", "1 Herro");
+	items[1] = new_item("Herro! 2", "2 Herro");
+	items[2] = new_item("Herro! 3", "3 Herro");
+
+	initscr();
+	cbreak();
+	noecho();
+	keypad(stdscr, true);
+
+	menu = new_menu(items);
+
+	post_menu(menu);
+	mvprintw(6, 2, "Lines: %d", LINES);
+
+	refresh();
+	getch();
+
+	endwin();
+}
 
 int main(int argc, char* argv[]) {
-	if (argc != 2) {
-		fprintf(stderr, "gimme one dir plx\n");
-		exit(1);
-	}
-
-	test2(argv[1]);
+	(void) argc;
+	(void) argv;
+	curses();
 }

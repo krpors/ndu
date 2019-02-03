@@ -1,5 +1,5 @@
 CFLAGS = -Wall -Wextra -MP -MMD -D_XOPEN_SOURCE=500
-LDLIBS = -lncurses
+LDLIBS = -lncurses -lmenu
 objects := ndu.o fs.o
 
 all: ndu
